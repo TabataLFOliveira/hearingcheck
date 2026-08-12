@@ -2,7 +2,6 @@
 
 #INTRODUÇÃO
 Este trabalho tem como tema o estudo do protocolo de autoavaliação auditiva em versão reduzida chamado de HHIE-S (Hearing Handicap Inventory for the Elderly Screening Version). 
-Falar sobre o que é HHIE-S e sua base HHIE e HHIA.
 O HHIE-S é um questionário de auto-avaliação utilizado na avaliação de pacientes com perda auditiva.  
 Este estudo tem como objetivo o reconhecimento da teoria e práticas do protocolo para adaptação do questionário utilizado. Esta adaptação será usada em um sistema de pré-triagem auditiva online que será aplicado em sites de estabelecimentos especializados como forma de captação de pacientes para consultas com profissionais de saúde auditiva.
 A justificativa para este estudo é tornar as perguntas do sistema em um questionário com base real e técnica, para confiabilidade do paciente, porém sem a substituição ou a exclusão de posterior consulta e exame com especialista em saúde auditiva. 
