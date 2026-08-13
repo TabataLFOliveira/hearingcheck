@@ -29,18 +29,18 @@ Perguntas Sociais / Situacionais (S):
 (S-4) Um problema de audição faz com que você use o telefone menos vezes do que gostaria?
 (S-5) Um problema de audição faz com que você evite grupos de pessoas?
 
-#Pontuação e Interpretação do HHIE-S
+Pontuação e Interpretação do HHIE-S
 
 O sistema de resposta é o mesmo (Sim = 4; Às vezes = 2; Não = 0), mas a soma total máxima muda para 40 pontos. O resultado é classificado da seguinte forma: 
 0 a 8 pontos: Sem percepção de handicap (normal);
 10 a 24 pontos: Handicap leve a moderado;
 26 a 40 pontos: Handicap severo.
 
-#SUGESTÃO DE ADAPTAÇÃO PARA O SISTEMA DE PRÉ-TRIAGEM ONLINE
+# SUGESTÃO DE ADAPTAÇÃO PARA O SISTEMA DE PRÉ-TRIAGEM ONLINE
 
 Para o site de uma clínica especializada em saúde auditiva, sugiro que as perguntas precisam ser rápidas, acolhedoras e sem jargões técnicos, com uso de uma linguagem que gere identificação imediata e mostre empatia.
 
-#Perguntas emocionais:
+Perguntas emocionais:
 	
 1.Você já se sentiu sem jeito ou com vergonha ao conversar com alguém que acabou de conhecer?
 2.Conversar com a sua própria família em casa às vezes traz uma sensação de frustração?
@@ -48,7 +48,7 @@ Para o site de uma clínica especializada em saúde auditiva, sugiro que as perg
 4.Sente que está deixando de aproveitar a vida ou ficando em desvantagem por não ouvir bem?
 5.Essa dificuldade para escutar já te deixou triste, desanimado ou chateado?
 
-#Perguntas Sociais:
+Perguntas Sociais:
 
 6.Precisa aumentar muito o volume da TV ou do rádio para conseguir entender o que dizem?
 7.Fica difícil bater papo e acompanhar a conversa com amigos e parentes na sala de casa?
@@ -56,7 +56,7 @@ Para o site de uma clínica especializada em saúde auditiva, sugiro que as perg
 9.Você evita ou atende menos o telefone por achar difícil ouvir quem está do outro lado?
 10.Evita ir a reuniões, eventos ou lugares com muita gente por causa da audição?
 
-  #Sugestão de pontuação e classificação de resultados
+  # Sugestão de pontuação e classificação de resultados
   
 A sugestão para cálculo e classificação de resultados é esconder os números durante o teste e mostrar o resultado final de forma acolhedora, focando no acolhimento e no agendamento de uma consulta.
 A pontuação interna do sistema continua a mesma da versão oficial (Sim = 4, Às vezes = 2, Não = 0). O resultado máximo é 40 pontos. O resultado pode ser classificado em: Nível 1: De 0 a 8 pontos – Audição Saudável; Nível 2: De 10 a 24 pontos – Alerta Leve a Moderado e; Nível 3: De 26 a 40 pontos – Alerta Importante / Severo.
