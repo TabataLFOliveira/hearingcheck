@@ -1,19 +1,19 @@
-#ESTUDO DO PROTOCOLO HHIE-S (HEARING HANDICAP INVENTORY FOR THE ELDERLY SCREENING VERSION) PARA APLICAÇÃO EM SISTEMA DE PRÉ-TRIAGEM AUDITIVA ONLINE
+# ESTUDO DO PROTOCOLO HHIE-S (HEARING HANDICAP INVENTORY FOR THE ELDERLY SCREENING VERSION) PARA APLICAÇÃO EM SISTEMA DE PRÉ-TRIAGEM AUDITIVA ONLINE
 
-#INTRODUÇÃO
+INTRODUÇÃO
 
 Este trabalho tem como tema o estudo do protocolo de autoavaliação auditiva em versão reduzida chamado de HHIE-S (Hearing Handicap Inventory for the Elderly Screening Version). 
 O HHIE-S é um questionário de auto-avaliação utilizado na avaliação de pacientes com perda auditiva.  
 Este estudo tem como objetivo o reconhecimento da teoria e práticas do protocolo para adaptação do questionário utilizado. Esta adaptação será usada em um sistema de pré-triagem auditiva online que será aplicado em sites de estabelecimentos especializados como forma de captação de pacientes para consultas com profissionais de saúde auditiva.
 A justificativa para este estudo é tornar as perguntas do sistema em um questionário com base real e técnica, para confiabilidade do paciente, porém sem a substituição ou a exclusão de posterior consulta e exame com especialista em saúde auditiva. 
 
-#UTILIZAÇÃO DO QUESTIONÁRIO
+UTILIZAÇÃO DO QUESTIONÁRIO
 	
 O HHIE (para idosos) e o HHIA (para adultos) compartilham quase todas as mesmas perguntas. Como o HHIA foi desenvolvido a partir do HHIE, os criadores modificaram apenas 3 perguntas para substituir atividades comuns de aposentados por situações focadas no mercado de trabalho e na rotina de adultos jovens.
 Cada um possui 25 perguntas divididas entre a subescala Social/Situacional (S) e a subescala Emocional (E).
 	A versão reduzida, chamada de HHIE-S (para idosos), utiliza exatamente 10 perguntas retiradas do questionário original de 25 itens. Elas são divididas igualmente em 5 perguntas emocionais (E) e 5 sociais/situacionais (S). 
 	
-#Perguntas Emocionais (E):
+Perguntas Emocionais (E):
 
 (E-1) Um problema de audição faz com que você se sinta envergonhado ao conhecer pessoas novas?
 (E-2) Um problema de audição faz com que você se sinta frustrado ao conversar com membros da sua família?
@@ -21,7 +21,7 @@ Cada um possui 25 perguntas divididas entre a subescala Social/Situacional (S) e
 (E-4) Um problema de audição faz com que você se sinta prejudicado (em desvantagem) por causa desse problema?
 (E-5) Um problema de audição faz com que você se sinta chateado ou deprimido?
 
-#Perguntas Sociais / Situacionais (S):
+Perguntas Sociais / Situacionais (S):
 
 (S-1) Um problema de audição lhe causa dificuldades para ouvir ou entender os programas de televisão ou rádio?
 (S-2) Um problema de audição faz com que você sinta dificuldades ao conversar com amigos ou parentes na sala de estar?
