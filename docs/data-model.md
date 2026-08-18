@@ -66,21 +66,6 @@ Representa o usuário que dá entrada com seus dados pessoais no sistema.
 - nome
 - contato
 
-                    TERMO
-                      │
-                      ↓
-                    ACEITE
-                      │
-                      ↓
-USUÁRIO ─────────── TESTE
-   │                 │
-   │                 ├── RESPOSTAS
-   │                 │      │
-   │                 │      ↓
-   │                 │   PERGUNTAS
-   │                 │
-   │                 └── RESULTADO
-   │
-   └──────→ LEAD
+             
 - pontuação
 - classificação
