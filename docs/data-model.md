@@ -72,3 +72,7 @@ Lead representa uma oportunidade de contato gerada quando o usuário fornece seu
 - contato            
 - pontuação
 - classificação
+
+Decisão em aberto
+
+Definir posteriormente a relação entre os dados do HearingCheck e o Lead, especialmente se a pontuação e a classificação deverão ser disponibilizadas à clínica ou permanecer apenas associadas ao histórico do usuário.
