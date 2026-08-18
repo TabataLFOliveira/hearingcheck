@@ -41,8 +41,13 @@ Representa o resultado obtido em uma realização específica do teste.
 
 ## Termo
 
-Termo 1 — Representa a Ciência e finalidade do HearingCheck
-Termo 2 - Representa o Consentimento para tratamento de dados
+Representa os termos apresentados pelo HearingCheck.
+
+**Termo 1 — Ciência e finalidade do HearingCheck**  
+Informa que o HearingCheck é uma pré-triagem e não constitui diagnóstico médico.
+
+**Termo 2 — Consentimento para tratamento de dados**  
+Informa sobre o tratamento dos dados fornecidos pelo usuário.
 
 - id
 - texto
@@ -60,12 +65,10 @@ Representa o aceite do usuário nos termos propostos pelo HearingCheck
 
 ## Lead
 
-Representa o usuário que dá entrada com seus dados pessoais no sistema.
+Lead representa uma oportunidade de contato gerada quando o usuário fornece seus dados e solicita uma avaliação.
 
 - id
 - nome
-- contato
-
-             
+- contato            
 - pontuação
 - classificação
