@@ -5,9 +5,13 @@ Objetivo: apresentar o HearingCheck e convidar o usuário a iniciar.
 Elementos:
 
 Nome da empresa
+
 Título: "Faça um teste rápido de percepção auditiva!"
+
 Texto: "Como anda sua audição?"
+
 Botão: "Conheça o teste"
+
 Nome do Hearingcheck
 
 Ação:
@@ -20,7 +24,9 @@ Objetivo: informar ao usuário a finalidade do HearingCheck.
 Elementos:
 
 Mensagem de finalidade: "Atenção!
+
 Este teste é apenas uma pré-triagem e não substitui uma avaliação médica."
+
 Botão: "Continuar"
 
 Ação: direcionar para os termos.
@@ -32,8 +38,11 @@ Objetivo: apresentar ao usuário os termos de ciência e finalidade e consentime
 Elementos:
 
 Termos (de forma separada, ainda em análise de organização para não tornar algo cansativo ao usuário)
+
 Botão de seleção: "Aceito o termo de ciência e finalidade."
+
 Botão de seleção: "Aceito o termo de consentimento de uso de dados."
+
 Botão: "Iniciar teste"
 
 Ação:
