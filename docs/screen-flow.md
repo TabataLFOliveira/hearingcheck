@@ -36,6 +36,12 @@ Botão de seleção: "Aceito o termo de ciência e finalidade."
 Botão de seleção: "Aceito o termo de consentimento de uso de dados."
 Botão: "Iniciar teste"
 
+Ação:
+
+O usuário deve selecionar os aceites necessários antes de iniciar o teste.
+
+Ao clicar em "Iniciar teste", o sistema apresenta a primeira pergunta do questionário.
+
 ## Tela 04 a 13 - Questionário
 
 Objetivo: apresentar as perguntas a serem respondidas pelo usuário.
@@ -56,7 +62,7 @@ Elementos:
 
 Título "Resultado'
 Texto do resultado sem valor, de forma acolhedora.
-Texto de lembrete de finalidade: "Lembrando que este teste não substitui um diagnóstico médico"!
+Texto de lembrete de finalidade: "Lembrando que este teste é apenas uma pré-triagem e não substitui uma avaliação médica."!
 Botão: "Continuar"
 
 ## Tela 15 - Convite para avaliação
@@ -67,9 +73,18 @@ Elementos:
 
 Mensagem: "Deseja receber uma avaliação auditiva gratuita com um de nossos especialistas?"
 Texto de resposta com botão de seleção
-Botão: "Continuar"
+Opções de resposta:
 
-## Tela 16 - Confirmação (quando usuário seleciona Não na tela 15)
+- Sim
+- Não
+
+Botão: "Continuar"
+Ação:
+
+- Caso o usuário selecione "Sim", o sistema direciona para a tela de cadastro.
+- Caso o usuário selecione "Não", o sistema apresenta a tela de agradecimento.
+
+## Tela 16 - Confirmação sem cadastro
 
 Objetivo: apresentar tela final de confirmação e agradecimento
 
@@ -78,7 +93,7 @@ Elementos:
 Mensagem: "Obrigado por participar! E não deixe de realizar sua avaliação auditiva periódica."
 Nome do Hearingcheck
 
-## Tela 16 - Cadastro (quando o usuário seleciona Sim na tela 15)
+## Tela 17 - Cadastro
 
 Objetivo: solicitar a digitação de dados pelo usuário
 
@@ -91,7 +106,7 @@ Texto: "Contato"
 Área de digitação do contato 
 Botão: "Confirmar e continuar"
 
-## Tela 17 - Confirmação (quando usuário seleciona Sim na tela 15)
+## Tela 18 - Confirmação após cadastro
 
 Objetivo: apresentar tela final de confirmação e agradecimento
 
