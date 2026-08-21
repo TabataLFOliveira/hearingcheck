@@ -58,9 +58,13 @@ Objetivo: apresentar as perguntas a serem respondidas pelo usuário.
 Elementos:
 
 Barra de progresso
+
 Texto da pergunta
+
 Texto das respostas com botão de seleção
+
 Botão: "Próxima" (tela das perguntas de 1 a 9)
+
 Botão: "Finalizar teste" (tela da pergunta 10)
 
 ## Tela 14 - Resultado
@@ -70,8 +74,11 @@ Objetivo: apresentar o resultado do teste do usuário
 Elementos:
 
 Título "Resultado'
+
 Texto do resultado sem valor, de forma acolhedora.
+
 Texto de lembrete de finalidade: "Lembrando que este teste é apenas uma pré-triagem e não substitui uma avaliação médica."!
+
 Botão: "Continuar"
 
 ## Tela 15 - Convite para avaliação
@@ -81,13 +88,16 @@ Objetivo: fazer um convite de avaliação auditiva gratuita ao usuário.
 Elementos:
 
 Mensagem: "Deseja receber uma avaliação auditiva gratuita com um de nossos especialistas?"
+
 Texto de resposta com botão de seleção
+
 Opções de resposta:
 
 - Sim
 - Não
 
 Botão: "Continuar"
+
 Ação:
 
 - Caso o usuário selecione "Sim", o sistema direciona para a tela de cadastro.
@@ -100,6 +110,7 @@ Objetivo: apresentar tela final de confirmação e agradecimento
 Elementos:
 
 Mensagem: "Obrigado por participar! E não deixe de realizar sua avaliação auditiva periódica."
+
 Nome do Hearingcheck
 
 ## Tela 17 - Cadastro
@@ -109,10 +120,15 @@ Objetivo: solicitar a digitação de dados pelo usuário
 Elementos:
 
 Mensagem: "Digite seus dados abaixo para receber sua avaliação auditiva gratuita."
+
 Texto: "Nome"
+
 Área de digitação do nome
+
 Texto: "Contato"
+
 Área de digitação do contato 
+
 Botão: "Confirmar e continuar"
 
 ## Tela 18 - Confirmação após cadastro
@@ -122,4 +138,5 @@ Objetivo: apresentar tela final de confirmação e agradecimento
 Elementos:
 
 Mensagem: "Obrigado por participar! Um de nossos especialistas entrará em contato."
+
 Nome do Hearingcheck
