@@ -10,8 +10,11 @@ A justificativa para este estudo é tornar as perguntas do sistema em um questio
 SOBRE OS QUESTIONÁRIOS
 
 O HHIE e o HHIA são questionários de autopercepção do impacto da perda auditiva (emocional e social) criados nos Estados Unidos por equipes de audiologistas e pesquisadores em datas distintas. 
+
 O HHIE (Hearing Handicap Inventory for the Elderly) foi criado por Ira M. Ventry e Barbara E. Weinstein, no ano de 1982. Tinha o objetivo voltado para a prática clínica e estudos geriátricos nos Estados Unidos (comumente associado a instituições acadêmicas americanas como a City University of New York - CUNY).
+
 O HHIA (Hearing Handicap Inventory for Adults) foi criado por Craig W. Newman, Barbara E. Weinstein, Gary P. Jacobson e G. A. Hug, no ano de 1990. Criado nos Estados Unidos como uma adaptação do HHIE original, substituindo itens voltados a idosos aposentados por questões adequadas a adultos mais jovens no mercado de trabalho.
+
 O questionário HHIE-S (Hearing Handicap Inventory for the Elderly - Screening Version) foi criado pelos pesquisadores Ira M. Ventry e Barbara E. Weinstein. Foi desenvolvido nos Estados Unidos em 1983 (como uma versão reduzida e de triagem do inventário completo HHIE original, lançado em 1982), no contexto de pesquisas voltadas à audiologia e gerontologia.
 
 COMO FUNCIONA OS QUESTIONÁRIOS
