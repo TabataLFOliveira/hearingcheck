@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "hearingcheck": {
+      "command": "npm",
+      "args": ["exec", "--", "tsx", "src/server/mcp.ts"]
+    }
+  }
+}
