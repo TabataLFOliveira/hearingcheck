@@ -274,6 +274,7 @@ h1.long { font-size: 1.7rem; }
 .demo-note p { margin: 0.15rem 0; }
 
 :focus-visible { outline: 3px solid var(--sage); outline-offset: 2px; }
+h1:focus-visible { outline: none; }
 
 @media (min-width: 720px) {
   .choice-row { grid-template-columns: 1fr 1fr; }
