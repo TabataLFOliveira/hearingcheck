@@ -6,6 +6,23 @@ Sistema de pré-triagem auditiva online para conscientização sobre saúde audi
 Status
 Em desenvolvimento
 
+## Executar
+
+O questionário público fica em `/`. A fila da equipe fica em `/painel`.
+
+```bash
+npm install
+npm test
+npm run build
+npm start
+```
+
+Abra `http://127.0.0.1:8787`. Para simular um anúncio, use `/?utm_source=google&utm_medium=cpc&utm_campaign=percepcao-outubro`. O totem usa `/?origem=totem`.
+
+Demonstração do painel: `recepcao@ouvix.local` e `avaliacao@ouvix.local`, senha `ouvix-demo`. A recepção vê a fila sem a pontuação. A avaliação vê a pontuação e as respostas.
+
+O servidor MCP lê a mesma base: `npm run mcp`. No Cursor ele está em `.cursor/mcp.json`, com as ferramentas `resumo_leads`, `listar_leads`, `atualizar_status` e `abrir_contato`.
+
 Objetivo
 
 O HearingCheck é um projeto pessoal criado para estudar Engenharia de Software, desenvolvimento web e design de produtos digitais.
