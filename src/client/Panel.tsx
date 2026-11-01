@@ -1,9 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { requestJson } from "./api";
-import { DEMO_PASSWORD, DEMO_USERS, ROLE_LABEL } from "../shared/copy";
+import { LEVEL_LABEL, ORIGIN_LABEL, ROLE_LABEL, STATUS_LABEL } from "../shared/copy";
 import type { LeadStatus, Level, Origin, Role } from "../shared/types";
 import { LEAD_STATUSES, ORIGINS } from "../shared/types";
-import { LEVEL_LABEL, ORIGIN_LABEL, STATUS_LABEL } from "../shared/copy";
 
 type Staff = { email: string; name: string; role: Role };
 
@@ -49,7 +48,7 @@ function when(iso: string): string {
 export function Panel() {
   const [staff, setStaff] = useState<Staff | null>(null);
   const [ready, setReady] = useState(false);
-  const [email, setEmail] = useState(DEMO_USERS[0].email);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -157,13 +156,6 @@ export function Panel() {
           </label>
           {error && <p className="error" role="alert">{error}</p>}
           <button className="btn" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar"}</button>
-          <aside className="demo-note">
-            <p>Acesso de demonstração</p>
-            {DEMO_USERS.map((user) => (
-              <p key={user.email}>{ROLE_LABEL[user.role]}: {user.email}</p>
-            ))}
-            <p>Senha: {DEMO_PASSWORD}</p>
-          </aside>
         </form>
       </main>
     );
