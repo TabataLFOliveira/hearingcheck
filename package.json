@@ -1,0 +1,32 @@
+{
+  "name": "hearingcheck",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "start": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx src/server/index.ts",
+    "mcp": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx src/server/mcp.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "NODE_OPTIONS='--disable-warning=ExperimentalWarning' tsx --test src/shared/domain.test.ts src/server/api.test.ts src/server/mcp.test.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "express": "^4.22.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
