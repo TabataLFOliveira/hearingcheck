@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import { once } from "node:events";
+import { mkdtempSync, rmSync } from "node:fs";
 import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test, { after, before } from "node:test";
 import type { Server } from "node:http";
 import type { DatabaseSync } from "node:sqlite";
 import { RESULT_COPY } from "../shared/copy.js";
 import type { AnswerValue } from "../shared/types.js";
 import { createApp } from "./app.js";
-import { openDatabase } from "./db.js";
+import { authenticate, openDatabase } from "./db.js";
 
 let server: Server;
 let base: string;
@@ -173,4 +176,26 @@ test("declining contact does not create a lead", async () => {
   });
   const list = await staff("/api/admin/leads?origin=totem");
   assert.equal(list.body.leads.length, 0);
+});
+
+test("a host password replaces the password already stored", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "hearingcheck-"));
+  const dbPath = path.join(dir, "hearingcheck.sqlite");
+  const previous = process.env.HEARINGCHECK_DEMO_PASSWORD;
+  delete process.env.HEARINGCHECK_DEMO_PASSWORD;
+  try {
+    const first = openDatabase(dbPath, { seedDemo: false });
+    assert.ok(authenticate(first, "recepcao@ouvix.local", "ouvix-demo"));
+    first.close();
+
+    process.env.HEARINGCHECK_DEMO_PASSWORD = "ouvir bem juntos";
+    const second = openDatabase(dbPath, { seedDemo: false });
+    assert.equal(authenticate(second, "recepcao@ouvix.local", "ouvix-demo"), undefined);
+    assert.ok(authenticate(second, "avaliacao@ouvix.local", "ouvir bem juntos"));
+    second.close();
+  } finally {
+    if (previous === undefined) delete process.env.HEARINGCHECK_DEMO_PASSWORD;
+    else process.env.HEARINGCHECK_DEMO_PASSWORD = previous;
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

@@ -184,16 +184,27 @@ export function openDatabase(dbPath: string, options?: { seedDemo?: boolean }): 
 }
 
 function ensureUsers(db: DatabaseSync): void {
-  const password = process.env.HEARINGCHECK_DEMO_PASSWORD || DEMO_PASSWORD;
+  const fromEnv = process.env.HEARINGCHECK_DEMO_PASSWORD;
+  const password = fromEnv || DEMO_PASSWORD;
   const insert = db.prepare(
     `INSERT INTO users (id, email, name, role, password_salt, password_hash)
      VALUES (?, ?, ?, ?, ?, ?)`,
   );
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?");
+  const update = db.prepare("UPDATE users SET password_salt = ?, password_hash = ? WHERE email = ?");
+  const existing = db.prepare(
+    "SELECT id, password_salt, password_hash FROM users WHERE email = ?",
+  );
   for (const user of DEMO_USERS) {
-    if (existing.get(user.email)) continue;
-    const { salt, hash } = hashPassword(password);
-    insert.run(randomUUID(), user.email, user.name, user.role, salt, hash);
+    const row = as<{ id: string; password_salt: string; password_hash: string }>(existing.get(user.email));
+    if (!row) {
+      const { salt, hash } = hashPassword(password);
+      insert.run(randomUUID(), user.email, user.name, user.role, salt, hash);
+      continue;
+    }
+    // A password set in the host replaces the one already stored. The local fallback does not.
+    if (!fromEnv || passwordMatches(fromEnv, row.password_salt, row.password_hash)) continue;
+    const { salt, hash } = hashPassword(fromEnv);
+    update.run(salt, hash, user.email);
   }
 }
 
