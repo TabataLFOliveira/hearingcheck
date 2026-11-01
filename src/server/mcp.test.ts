@@ -52,7 +52,10 @@ test("MCP tools read and update the same lead database", async () => {
     const contact = await client.callTool({ name: "abrir_contato", arguments: { leadId: lead.id } });
     const opened = JSON.parse(textOf(contact)) as { waUrl: string; message: string; score?: number };
     assert.match(opened.waUrl, /^https:\/\/wa\.me\/5511900000004/);
-    assert.match(opened.message, /não é um diagnóstico/);
+    assert.equal(
+      opened.message,
+      "Olá, Sr(a) Paulo Demo! Tudo bem? Aqui é da equipe Ouvix. Recebemos o seu pedido para a avaliação auditiva gratuita e gostaríamos de agendar o seu horário.",
+    );
     assert.equal("score" in opened, false);
     assert.equal(opened.message.includes("28"), false);
 

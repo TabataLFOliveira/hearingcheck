@@ -201,7 +201,7 @@ h1.long { font-size: 1.7rem; }
   font-size: 0.85rem;
 }
 .foot p { margin: 0; }
-.foot a { color: var(--sage); font-weight: 500; }
+.foot a { color: var(--sage); font-weight: 500; white-space: nowrap; }
 
 .panel-head, .filters, .stats { display: flex; gap: 0.8rem; align-items: end; justify-content: space-between; flex-wrap: wrap; }
 .panel-head h1 { font-size: 1.8rem; }

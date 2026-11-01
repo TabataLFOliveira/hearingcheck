@@ -8,7 +8,7 @@ export const REMINDER =
 export const TERMS = {
   purpose: {
     title: "Ciência e finalidade",
-    body: "O HearingCheck é uma pré-triagem de percepção auditiva da Ouvix. O resultado não é diagnóstico e não substitui uma avaliação com especialista.",
+    body: "Este teste é uma pré-triagem de percepção auditiva. O resultado não é diagnóstico médico e não substitui uma avaliação com especialista.",
     accept: "Aceito o termo de ciência e finalidade.",
   },
   data: {
@@ -34,7 +34,7 @@ export const RESULT_COPY: Record<Level, { title: string; body: string }> = {
 };
 
 export const THANKS_LEAD = "Obrigado por participar! Um de nossos especialistas entrará em contato.";
-export const THANKS_DONE = "Obrigado por participar! E não deixe de realizar sua avaliação auditiva periódica.";
+export const THANKS_DONE = THANKS_LEAD;
 
 export const ANSWER_LABEL: Record<AnswerValue, string> = {
   sim: "Sim",
@@ -76,6 +76,6 @@ export const DEMO_USERS = [
 ];
 
 export function contactMessage(name: string): string {
-  const first = name.trim().split(/\s+/)[0] || name.trim();
-  return `Olá, ${first}. Aqui é a equipe da Ouvix. Vimos seu pedido de avaliação auditiva gratuita e queremos combinar um horário. Este contato não é um diagnóstico.`;
+  const person = name.trim().replace(/\s+/g, " ");
+  return `Olá, Sr(a) ${person}! Tudo bem? Aqui é da equipe Ouvix. Recebemos o seu pedido para a avaliação auditiva gratuita e gostaríamos de agendar o seu horário.`;
 }

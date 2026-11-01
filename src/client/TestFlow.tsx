@@ -211,7 +211,7 @@ export function TestFlow() {
             Um teste rápido de percepção auditiva. Em poucos minutos você vê uma orientação e, se quiser, pede uma avaliação gratuita.
           </p>
           <div className="notice">
-            <strong>Atenção.</strong> Este teste é apenas uma pré-triagem e não substitui uma avaliação médica.
+            <strong>Atenção.</strong> Este teste não substitui avaliação profissional.
           </div>
           <section className="term">
             <h2>{TERMS.purpose.title}</h2>
@@ -325,14 +325,12 @@ export function TestFlow() {
 
       {phase === "thanks" && (
         <section className="card thanks">
-          <p className="eyebrow">Ouvix</p>
           <h1 ref={headingRef} tabIndex={-1}>{thanks}</h1>
-          <p className="lede">{REMINDER}</p>
         </section>
       )}
 
       <footer className="foot">
-        <p>Ouvix, representante Widex. O HearingCheck não substitui uma avaliação profissional.</p>
+        <p>Ouvix, conectando você aos sons da vida. O HearingCheck não substitui uma avaliação profissional.</p>
         <a href="/painel">Equipe Ouvix</a>
       </footer>
     </main>
