@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import hearingCheckLogo from "./assets/hearingcheck-logo.png";
 import { requestJson } from "./api";
 import { ANSWER_LABEL, REMINDER, TERMS } from "../shared/copy";
 import { QUESTIONS } from "../shared/questions";
@@ -203,12 +204,11 @@ export function TestFlow() {
     <main className="shell">
       {phase === "landing" && (
         <form className="card" onSubmit={start}>
-          <p className="eyebrow">Ouvix · representante Widex</p>
-          <h1 ref={headingRef} tabIndex={-1}>
+          <h1 className="center" ref={headingRef} tabIndex={-1}>
             Como anda a sua audição?
           </h1>
           <p className="lede">
-            Um teste rápido de percepção auditiva. Em poucos minutos você vê uma orientação e, se quiser, pede uma avaliação gratuita.
+            Teste rápido de percepção auditiva. Receba sua orientação em minutos e agende uma avaliação gratuita.
           </p>
           <div className="notice">
             <strong>Atenção.</strong> Este teste não substitui avaliação profissional.
@@ -330,8 +330,11 @@ export function TestFlow() {
       )}
 
       <footer className="foot">
-        <p>Ouvix, conectando você aos sons da vida. O HearingCheck não substitui uma avaliação profissional.</p>
-        <a href="/painel">Equipe Ouvix</a>
+        <div className="foot-copy">
+          <p>Ouvix, conectando você aos sons da vida.</p>
+          <a href="/painel">Equipe Ouvix</a>
+        </div>
+        <img className="foot-logo" src={hearingCheckLogo} alt="HearingCheck" />
       </footer>
     </main>
   );
