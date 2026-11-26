@@ -10,7 +10,7 @@ type Lead = {
   id: string;
   name: string;
   whatsappDisplay: string;
-  level: Level;
+  level: Level | null;
   levelLabel: string;
   origin: Origin;
   originLabel: string;
@@ -21,8 +21,16 @@ type Lead = {
   score?: number;
   message?: string;
   waUrl?: string;
-  answers?: { questionId: number; text: string; label: string }[];
+  answers?: { questionId: number; text: string; label: string; scored: boolean }[];
 };
+
+function levelClass(level: Level | null): string {
+  return level ? `chip level-${level}` : "chip level-pending";
+}
+
+function unfinishedLabel(count: number): string {
+  return count === 1 ? "começou e não concluiu" : "começaram e não concluíram";
+}
 
 type Summary = {
   days: number;
@@ -31,6 +39,7 @@ type Summary = {
   byStatus: { status: LeadStatus; label: string; count: number }[];
   sessionsStarted: number;
   sessionsFinished: number;
+  sessionsUnfinished: number;
 };
 
 type Filters = { status: string; origin: string; level: string };
@@ -179,6 +188,7 @@ export function Panel() {
           <p><strong>{novos}</strong> novos</p>
           <p><strong>{importantes}</strong> alerta importante</p>
           <p><strong>{summary.sessionsFinished}</strong> de <strong>{summary.sessionsStarted}</strong> testes concluídos</p>
+          <p><strong>{summary.sessionsUnfinished}</strong> {unfinishedLabel(summary.sessionsUnfinished)}</p>
         </section>
       )}
       <div className="filters">
@@ -219,7 +229,7 @@ export function Panel() {
                 <strong>{lead.name}</strong>
                 <small>{lead.whatsappDisplay} · {when(lead.createdAt)}</small>
               </span>
-              <span className={`chip level-${lead.level}`}>{lead.levelLabel}</span>
+              <span className={levelClass(lead.level)}>{lead.levelLabel}</span>
               <span className="chip">{lead.originLabel}{lead.campaign ? ` · ${lead.campaign}` : ""}</span>
               <span className="chip">{lead.statusLabel}</span>
             </button>
@@ -232,9 +242,10 @@ export function Panel() {
               <p className="eyebrow">{detail.originLabel}{detail.campaign ? ` · ${detail.campaign}` : ""}</p>
               <h2>{detail.name}</h2>
               <p>{detail.whatsappDisplay}</p>
-              <p className={`chip level-${detail.level}`}>{detail.levelLabel}</p>
+              <p className={levelClass(detail.level)}>{detail.levelLabel}</p>
               {typeof detail.score === "number" && <p className="score">Pontuação interna: {detail.score} de 40</p>}
-              {staff.role === "recepcao" && (
+              {detail.level == null && <p className="hint">Esta pessoa ainda não terminou o teste.</p>}
+              {detail.level != null && staff.role === "recepcao" && (
                 <p className="hint">A pontuação e as respostas ficam com a equipe de avaliação.</p>
               )}
               {detail.waUrl && (
@@ -258,7 +269,10 @@ export function Panel() {
                 <ol className="answers">
                   {detail.answers.map((answer) => (
                     <li key={answer.questionId}>
-                      <span>{answer.text}</span>
+                      <span>
+                        {answer.text}
+                        {answer.scored === false && <small className="aside">Não entra na pontuação</small>}
+                      </span>
                       <strong>{answer.label}</strong>
                     </li>
                   ))}

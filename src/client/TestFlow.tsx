@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import hearingCheckLogo from "./assets/hearingcheck-logo.png";
 import { requestJson } from "./api";
-import { ANSWER_LABEL, REMINDER, TERMS } from "../shared/copy";
-import { QUESTIONS } from "../shared/questions";
+import { ANSWER_LABEL, REMINDER, RESULT_VOUCHER, TERMS } from "../shared/copy";
+import { QUESTIONNAIRE_VERSION, QUESTIONS } from "../shared/questions";
 import type { AnswerValue } from "../shared/types";
 
-type Phase = "landing" | "question" | "result" | "contact" | "thanks";
+type Phase = "landing" | "contact" | "question" | "result" | "thanks";
 
 type ResultCopy = { title: string; body: string; reminder: string };
 
 type PublicSession = {
   id: string;
   phase: "question" | "result" | "thanks";
+  questionnaireVersion: string | null;
   answers: { questionId: number; value: AnswerValue }[];
   result?: ResultCopy;
   thanks?: string;
@@ -40,7 +41,7 @@ function trackingFromUrl() {
 export function TestFlow() {
   const [phase, setPhase] = useState<Phase>("landing");
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Array<AnswerValue | null>>(Array(10).fill(null));
+  const [answers, setAnswers] = useState<Array<AnswerValue | null>>(Array(QUESTIONS.length).fill(null));
   const [purpose, setPurpose] = useState(false);
   const [dataOk, setDataOk] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -73,8 +74,14 @@ export function TestFlow() {
   }, [phase, step]);
 
   function restore(session: PublicSession) {
-    const next = Array(10).fill(null) as Array<AnswerValue | null>;
-    for (const answer of session.answers) next[answer.questionId - 1] = answer.value;
+    if (session.questionnaireVersion !== QUESTIONNAIRE_VERSION) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+    const next = Array(QUESTIONS.length).fill(null) as Array<AnswerValue | null>;
+    for (const answer of session.answers) {
+      if (answer.questionId >= 1 && answer.questionId <= next.length) next[answer.questionId - 1] = answer.value;
+    }
     setAnswers(next);
     setSessionId(session.id);
     if (session.phase === "thanks" && session.thanks) {
@@ -89,35 +96,18 @@ export function TestFlow() {
       return;
     }
     const firstOpen = next.findIndex((value) => value == null);
-    setStep(firstOpen === -1 ? 9 : firstOpen);
+    setStep(firstOpen === -1 ? QUESTIONS.length - 1 : firstOpen);
     setPhase("question");
   }
 
-  async function start(event: FormEvent) {
+  function continueToContact(event: FormEvent) {
     event.preventDefault();
     if (!purpose || !dataOk) {
       setError("Aceite os dois termos para começar.");
       return;
     }
-    setBusy(true);
     setError(null);
-    try {
-      const created = await requestJson<{ id: string }>("/api/sessions", {
-        method: "POST",
-        body: JSON.stringify({
-          purposeAccepted: true,
-          dataAccepted: true,
-          tracking: trackingFromUrl(),
-        }),
-      });
-      sessionStorage.setItem(STORAGE_KEY, created.id);
-      setSessionId(created.id);
-      setPhase("question");
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Não foi possível concluir agora.");
-    } finally {
-      setBusy(false);
-    }
+    setPhase("contact");
   }
 
   function choose(value: AnswerValue) {
@@ -138,7 +128,7 @@ export function TestFlow() {
         method: "POST",
         body: JSON.stringify({ questionId: step + 1, value }),
       });
-      if (step < 9) {
+      if (step < QUESTIONS.length - 1) {
         setStep(step + 1);
         return;
       }
@@ -155,12 +145,40 @@ export function TestFlow() {
     }
   }
 
-  async function decline() {
+  async function beginTest(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const created = await requestJson<{ id: string; origin: string }>("/api/sessions", {
+        method: "POST",
+        body: JSON.stringify({
+          purposeAccepted: true,
+          dataAccepted: true,
+          name,
+          whatsapp: phone,
+          tracking: trackingFromUrl(),
+        }),
+      });
+      window.dataLayer = window.dataLayer ?? [];
+      window.dataLayer.push({ event: "generate_lead", origin: created.origin });
+      sessionStorage.setItem(STORAGE_KEY, created.id);
+      setSessionId(created.id);
+      setStep(0);
+      setPhase("question");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Não foi possível concluir agora.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function conclude() {
     if (!sessionId) return;
     setBusy(true);
     setError(null);
     try {
-      const response = await requestJson<{ message: string }>(`/api/sessions/${sessionId}/decline`, {
+      const response = await requestJson<{ message: string }>(`/api/sessions/${sessionId}/close`, {
         method: "POST",
         body: "{}",
       });
@@ -173,37 +191,14 @@ export function TestFlow() {
     }
   }
 
-  async function sendLead(event: FormEvent) {
-    event.preventDefault();
-    if (!sessionId) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const response = await requestJson<{ message: string; conversion: string; origin: string }>(
-        `/api/sessions/${sessionId}/lead`,
-        {
-          method: "POST",
-          body: JSON.stringify({ name, whatsapp: phone }),
-        },
-      );
-      window.dataLayer = window.dataLayer ?? [];
-      window.dataLayer.push({ event: "generate_lead", origin: response.origin });
-      setThanks(response.message);
-      setPhase("thanks");
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Não foi possível concluir agora.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const question = QUESTIONS[step];
   const progress = Math.round(((step + 1) / QUESTIONS.length) * 100);
+  const choices: AnswerValue[] = question?.scored ? ["sim", "as_vezes", "nao"] : ["sim", "nao"];
 
   return (
     <main className="shell">
       {phase === "landing" && (
-        <form className="card" onSubmit={start}>
+        <form className="card" onSubmit={continueToContact}>
           <h1 className="center" ref={headingRef} tabIndex={-1}>
             Como anda a sua audição?
           </h1>
@@ -231,7 +226,7 @@ export function TestFlow() {
           </section>
           {error && <p className="error" role="alert">{error}</p>}
           <button className="btn" type="submit" disabled={busy || !purpose || !dataOk}>
-            {busy ? "Abrindo…" : "Iniciar teste"}
+            Continuar
           </button>
           {(!purpose || !dataOk) && <p className="hint">Os dois aceites são necessários para começar.</p>}
         </form>
@@ -247,7 +242,7 @@ export function TestFlow() {
             {question.text}
           </h1>
           <div className="options" role="radiogroup" aria-label="Resposta">
-            {(Object.keys(ANSWER_LABEL) as AnswerValue[]).map((value) => (
+            {choices.map((value) => (
               <button
                 key={value}
                 type="button"
@@ -267,7 +262,7 @@ export function TestFlow() {
               </button>
             )}
             <button className="btn" type="button" onClick={nextQuestion} disabled={busy || !answers[step]}>
-              {busy ? "Salvando…" : step === 9 ? "Finalizar teste" : "Próxima"}
+              {busy ? "Salvando…" : step === QUESTIONS.length - 1 ? "Finalizar teste" : "Próxima"}
             </button>
           </div>
         </section>
@@ -276,26 +271,21 @@ export function TestFlow() {
       {phase === "result" && result && (
         <section className="card">
           <p className="eyebrow">Resultado</p>
-          <h1 ref={headingRef} tabIndex={-1}>{result.title}</h1>
-          <p className="lede">{result.body}</p>
+          <h1 className="result-primary" ref={headingRef} tabIndex={-1}>{result.body}</h1>
+          <p className="result-secondary">{result.title}</p>
           <div className="notice">{result.reminder || REMINDER}</div>
-          <h2 className="ask">Deseja receber uma avaliação auditiva gratuita com um de nossos especialistas?</h2>
+          <p className="voucher">{RESULT_VOUCHER}</p>
           {error && <p className="error" role="alert">{error}</p>}
-          <div className="choice-row">
-            <button className="btn" type="button" onClick={() => { setError(null); setPhase("contact"); }} disabled={busy}>
-              Sim, quero a avaliação
-            </button>
-            <button className="btn secondary" type="button" onClick={decline} disabled={busy}>
-              Agora não
-            </button>
-          </div>
+          <button className="btn" type="button" onClick={conclude} disabled={busy}>
+            {busy ? "Salvando…" : "Concluir"}
+          </button>
         </section>
       )}
 
       {phase === "contact" && (
-        <form className="card" onSubmit={sendLead}>
-          <p className="eyebrow">Avaliação gratuita</p>
-          <h1 className="long" ref={headingRef} tabIndex={-1}>Digite seus dados abaixo para receber sua avaliação auditiva gratuita.</h1>
+        <form className="card" onSubmit={beginTest}>
+          <p className="eyebrow phrase">Vamos Começar</p>
+          <h1 className="long" ref={headingRef} tabIndex={-1}>Informe seus dados para iniciar</h1>
           <label className="field">
             <span>Nome</span>
             <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" required />
@@ -313,11 +303,11 @@ export function TestFlow() {
           </label>
           {error && <p className="error" role="alert">{error}</p>}
           <div className="actions">
-            <button className="btn secondary" type="button" onClick={() => setPhase("result")} disabled={busy}>
+            <button className="btn secondary" type="button" onClick={() => { setError(null); setPhase("landing"); }} disabled={busy}>
               Voltar
             </button>
             <button className="btn" type="submit" disabled={busy}>
-              {busy ? "Enviando…" : "Confirmar e continuar"}
+              {busy ? "Abrindo…" : "Começar o teste"}
             </button>
           </div>
         </form>

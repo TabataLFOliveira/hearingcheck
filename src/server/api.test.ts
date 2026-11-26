@@ -6,11 +6,12 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test, { after, before } from "node:test";
 import type { Server } from "node:http";
-import type { DatabaseSync } from "node:sqlite";
-import { RESULT_COPY } from "../shared/copy.js";
+import { DatabaseSync } from "node:sqlite";
+import { LEVEL_PENDING, RESULT_COPY } from "../shared/copy.js";
+import { LEGACY_QUESTIONS, QUESTIONS } from "../shared/questions.js";
 import type { AnswerValue } from "../shared/types.js";
 import { createApp } from "./app.js";
-import { authenticate, openDatabase } from "./db.js";
+import { authenticate, createLead, createSession, finishSession, getLead, openDatabase, saveAnswer } from "./db.js";
 
 let server: Server;
 let base: string;
@@ -50,57 +51,81 @@ function jar() {
 
 const level2: AnswerValue[] = ["sim", "sim", "sim", "sim", "sim", "nao", "nao", "nao", "nao", "nao"];
 
-async function finishPublicTest(request: ReturnType<typeof jar>, answers: AnswerValue[]) {
-  const created = await request("/api/sessions", {
-    method: "POST",
-    body: JSON.stringify({
-      purposeAccepted: true,
-      dataAccepted: true,
-      tracking: { utmSource: "google", utmMedium: "cpc", utmCampaign: "percepcao-outubro" },
-    }),
-  });
-  assert.equal(created.status, 201);
-  const id = created.body.id as string;
-  for (let index = 0; index < answers.length; index += 1) {
-    const saved = await request(`/api/sessions/${id}/answers`, {
-      method: "POST",
-      body: JSON.stringify({ questionId: index + 1, value: answers[index] }),
-    });
-    assert.equal(saved.status, 200);
-  }
-  const finished = await request(`/api/sessions/${id}/finish`, { method: "POST", body: "{}" });
-  return { id, finished };
+async function openSession(
+  request: ReturnType<typeof jar>,
+  body: Record<string, unknown>,
+) {
+  return request("/api/sessions", { method: "POST", body: JSON.stringify(body) });
 }
 
 test("public result hides the score and a lead keeps campaign origin", async () => {
   const request = jar();
-  const rejected = await request("/api/sessions", {
-    method: "POST",
-    body: JSON.stringify({ purposeAccepted: true, dataAccepted: false }),
-  });
+  const rejected = await openSession(request, { purposeAccepted: true, dataAccepted: false, name: "Helena Costa", whatsapp: "11988887777" });
   assert.equal(rejected.status, 400);
 
-  const { id, finished } = await finishPublicTest(request, level2);
+  const before = db.prepare("SELECT COUNT(*) AS n FROM sessions").get() as { n: number };
+  const invalid = await openSession(request, {
+    purposeAccepted: true,
+    dataAccepted: true,
+    name: "H",
+    whatsapp: "123",
+    tracking: { utmSource: "google" },
+  });
+  assert.equal(invalid.status, 400);
+  const afterInvalid = db.prepare("SELECT COUNT(*) AS n FROM sessions").get() as { n: number };
+  assert.equal(afterInvalid.n, before.n);
+
+  const created = await openSession(request, {
+    purposeAccepted: true,
+    dataAccepted: true,
+    name: "Helena Costa",
+    whatsapp: "(11) 98888-7777",
+    tracking: { utmSource: "google", utmMedium: "cpc", utmCampaign: "percepcao-outubro" },
+  });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.conversion, "Lead");
+  assert.equal(created.body.origin, "google");
+  const id = created.body.id as string;
+
+  const recepcaoEarly = jar();
+  await recepcaoEarly("/api/admin/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "recepcao@ouvix.local", password: "ouvix-demo" }),
+  });
+  const early = await recepcaoEarly("/api/admin/leads?origin=google");
+  const waiting = early.body.leads.find((item: { name: string }) => item.name === "Helena Costa");
+  assert.ok(waiting);
+  assert.equal(waiting.level, null);
+  assert.equal(waiting.levelLabel, LEVEL_PENDING);
+  assert.equal("score" in waiting, false);
+
+  const audiometry = await request(`/api/sessions/${id}/answers`, {
+    method: "POST",
+    body: JSON.stringify({ questionId: 11, value: "as_vezes" }),
+  });
+  assert.equal(audiometry.status, 400);
+
+  for (let index = 0; index < level2.length; index += 1) {
+    const saved = await request(`/api/sessions/${id}/answers`, {
+      method: "POST",
+      body: JSON.stringify({ questionId: index + 1, value: level2[index] }),
+    });
+    assert.equal(saved.status, 200);
+  }
+  const tooSoon = await request(`/api/sessions/${id}/finish`, { method: "POST", body: "{}" });
+  assert.equal(tooSoon.status, 400);
+  const savedExtra = await request(`/api/sessions/${id}/answers`, {
+    method: "POST",
+    body: JSON.stringify({ questionId: 11, value: "sim" }),
+  });
+  assert.equal(savedExtra.status, 200);
+
+  const finished = await request(`/api/sessions/${id}/finish`, { method: "POST", body: "{}" });
   assert.equal(finished.status, 200);
   assert.equal(finished.body.title, RESULT_COPY[2].title);
   assert.equal("score" in finished.body, false);
   assert.equal("level" in finished.body, false);
   assert.equal(JSON.stringify(finished.body).includes("20"), false);
-
-  const lead = await request(`/api/sessions/${id}/lead`, {
-    method: "POST",
-    body: JSON.stringify({ name: "Helena Costa", whatsapp: "(11) 98888-7777" }),
-  });
-  assert.equal(lead.status, 201);
-  assert.equal(lead.body.conversion, "Lead");
-  assert.equal(lead.body.origin, "google");
-  assert.equal(lead.body.message.includes("diagnóst"), false);
-
-  const again = await request(`/api/sessions/${id}/lead`, {
-    method: "POST",
-    body: JSON.stringify({ name: "Outra Pessoa", whatsapp: "11977776666" }),
-  });
-  assert.equal(again.status, 201);
 
   const locked = await request("/api/admin/leads");
   assert.equal(locked.status, 401);
@@ -143,20 +168,165 @@ test("public result hides the score and a lead keeps campaign origin", async () 
   assert.equal(clinical.body.role, "avaliacao");
   const detail = await avaliacao(`/api/admin/leads/${helena.id}`);
   assert.equal(detail.body.score, 20);
-  assert.equal(detail.body.answers.length, 10);
+  assert.equal(detail.body.answers.length, 11);
+  assert.equal(detail.body.answers[0].text, QUESTIONS[0].text);
   assert.equal(detail.body.answers[0].label, "Sim");
+  assert.equal(detail.body.answers[10].text, QUESTIONS[10].text);
+  assert.equal(detail.body.answers[10].label, "Sim");
+  assert.equal(detail.body.answers[10].scored, false);
+
+  const closed = await request(`/api/sessions/${id}/close`, { method: "POST", body: "{}" });
+  assert.equal(closed.status, 200);
+  assert.match(closed.body.message, /especialistas entrará em contato/);
 });
 
-test("declining contact does not create a lead", async () => {
+test("answering the audiometry question does not change the score", async () => {
   const request = jar();
-  const created = await request("/api/sessions", {
-    method: "POST",
-    body: JSON.stringify({
-      purposeAccepted: true,
-      dataAccepted: true,
-      tracking: { origem: "totem" },
-    }),
+  const created = await openSession(request, {
+    purposeAccepted: true,
+    dataAccepted: true,
+    name: "Lia Nunes",
+    whatsapp: "21988887777",
+    tracking: { origem: "totem" },
   });
+  const id = created.body.id as string;
+  for (let index = 0; index < level2.length; index += 1) {
+    await request(`/api/sessions/${id}/answers`, {
+      method: "POST",
+      body: JSON.stringify({ questionId: index + 1, value: level2[index] }),
+    });
+  }
+  await request(`/api/sessions/${id}/answers`, {
+    method: "POST",
+    body: JSON.stringify({ questionId: 11, value: "nao" }),
+  });
+  const finished = await request(`/api/sessions/${id}/finish`, { method: "POST", body: "{}" });
+  assert.equal(finished.body.title, RESULT_COPY[2].title);
+
+  const staff = jar();
+  await staff("/api/admin/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "avaliacao@ouvix.local", password: "ouvix-demo" }),
+  });
+  const list = await staff("/api/admin/leads?origin=totem");
+  const lia = list.body.leads.find((item: { name: string }) => item.name === "Lia Nunes");
+  const detail = await staff(`/api/admin/leads/${lia.id}`);
+  assert.equal(detail.body.score, 20);
+  assert.equal(detail.body.answers[10].label, "Não");
+});
+
+test("older sessions keep the questionnaire they answered", () => {
+  const sessionId = createSession(db, { origem: "site" });
+  db.prepare("UPDATE sessions SET questionnaire_version = NULL WHERE id = ?").run(sessionId);
+  LEGACY_QUESTIONS.forEach((_, index) => saveAnswer(db, sessionId, index + 1, index === 0 ? "sim" : "nao"));
+  finishSession(db, sessionId);
+  const lead = createLead(db, sessionId, "Antigo Silva", "11977776666");
+  const detail = getLead(db, lead.id, "avaliacao");
+  assert.ok(detail);
+  assert.equal(detail.answers?.length, 10);
+  assert.equal(detail.answers?.[0].text, LEGACY_QUESTIONS[0].text);
+  assert.equal(detail.score, 4);
+});
+
+test("an existing database keeps old leads and accepts a lead before the test ends", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "hearingcheck-legacy-"));
+  const dbPath = path.join(dir, "hearingcheck.sqlite");
+  const legacy = new DatabaseSync(dbPath);
+  legacy.exec(`
+    CREATE TABLE sessions (
+      id TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL,
+      origin TEXT NOT NULL,
+      utm_source TEXT,
+      utm_medium TEXT,
+      utm_campaign TEXT,
+      gclid TEXT,
+      fbclid TEXT,
+      consent_purpose_at TEXT NOT NULL,
+      consent_data_at TEXT NOT NULL,
+      consent_version TEXT NOT NULL,
+      finished_at TEXT,
+      score INTEGER,
+      level INTEGER,
+      lead_choice TEXT
+    );
+    CREATE TABLE answers (
+      session_id TEXT NOT NULL,
+      question_id INTEGER NOT NULL,
+      value TEXT NOT NULL,
+      PRIMARY KEY (session_id, question_id)
+    );
+    CREATE TABLE leads (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      whatsapp TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      level INTEGER NOT NULL,
+      origin TEXT NOT NULL,
+      campaign TEXT,
+      status TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  `);
+  legacy.prepare(
+    `INSERT INTO sessions (
+      id, created_at, origin, consent_purpose_at, consent_data_at, consent_version, finished_at, score, level, lead_choice
+    ) VALUES ('sess-old', '2026-10-01T00:00:00.000Z', 'site', '2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z', '2026-10', '2026-10-01T00:00:00.000Z', 8, 1, 'sim')`,
+  ).run();
+  legacy.prepare(
+    `INSERT INTO leads (
+      id, session_id, name, whatsapp, score, level, origin, campaign, status, created_at, updated_at
+    ) VALUES ('lead-old', 'sess-old', 'Antiga', '5511999999999', 8, 1, 'site', NULL, 'novo', '2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z')`,
+  ).run();
+  legacy.close();
+
+  const migrated = openDatabase(dbPath, { seedDemo: false });
+  try {
+    const kept = migrated.prepare("SELECT score, level FROM leads WHERE id = 'lead-old'").get() as { score: number; level: number };
+    assert.equal(kept.score, 8);
+    assert.equal(kept.level, 1);
+    const columns = migrated.prepare("PRAGMA table_info(sessions)").all() as Array<{ name: string }>;
+    assert.ok(columns.some((column) => column.name === "closed_at"));
+    assert.ok(columns.some((column) => column.name === "questionnaire_version"));
+
+    const sessionId = createSession(migrated, { origem: "meta" });
+    const lead = createLead(migrated, sessionId, "Nova Pessoa", "11966665555");
+    const row = migrated.prepare("SELECT score, level FROM leads WHERE id = ?").get(lead.id) as { score: number | null; level: number | null };
+    assert.equal(row.score, null);
+    assert.equal(row.level, null);
+  } finally {
+    migrated.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a started test that is not finished is counted apart from completed tests", async () => {
+  const staff = jar();
+  const login = await staff("/api/admin/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "avaliacao@ouvix.local", password: "ouvix-demo" }),
+  });
+  assert.equal(login.status, 200);
+  const before = await staff("/api/admin/summary?days=30");
+  assert.equal(before.status, 200);
+
+  const request = jar();
+  const created = await openSession(request, {
+    purposeAccepted: true,
+    dataAccepted: true,
+    name: "Incompleto Dias",
+    whatsapp: "11955554444",
+    tracking: { origem: "site" },
+  });
+  assert.equal(created.status, 201);
+
+  const afterStart = await staff("/api/admin/summary?days=30");
+  assert.equal(afterStart.body.sessionsStarted, before.body.sessionsStarted + 1);
+  assert.equal(afterStart.body.sessionsUnfinished, before.body.sessionsUnfinished + 1);
+  assert.equal(afterStart.body.sessionsFinished, before.body.sessionsFinished);
+
   const id = created.body.id as string;
   for (let index = 0; index < 10; index += 1) {
     await request(`/api/sessions/${id}/answers`, {
@@ -164,18 +334,16 @@ test("declining contact does not create a lead", async () => {
       body: JSON.stringify({ questionId: index + 1, value: "nao" }),
     });
   }
-  const finished = await request(`/api/sessions/${id}/finish`, { method: "POST", body: "{}" });
-  assert.equal(finished.body.title, RESULT_COPY[1].title);
-  const declined = await request(`/api/sessions/${id}/decline`, { method: "POST", body: "{}" });
-  assert.equal(declined.status, 200);
-
-  const staff = jar();
-  await staff("/api/admin/login", {
+  await request(`/api/sessions/${id}/answers`, {
     method: "POST",
-    body: JSON.stringify({ email: "recepcao@ouvix.local", password: "ouvix-demo" }),
+    body: JSON.stringify({ questionId: 11, value: "nao" }),
   });
-  const list = await staff("/api/admin/leads?origin=totem");
-  assert.equal(list.body.leads.length, 0);
+  const finished = await request(`/api/sessions/${id}/finish`, { method: "POST", body: "{}" });
+  assert.equal(finished.status, 200);
+
+  const afterFinish = await staff("/api/admin/summary?days=30");
+  assert.equal(afterFinish.body.sessionsUnfinished, before.body.sessionsUnfinished);
+  assert.equal(afterFinish.body.sessionsFinished, before.body.sessionsFinished + 1);
 });
 
 test("a host password replaces the password already stored", () => {

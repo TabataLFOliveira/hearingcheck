@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveOrigin } from "./origin.js";
 import { normalizeName, normalizeWhatsapp } from "./phone.js";
+import { QUESTIONNAIRE_VERSION, QUESTIONS, questionsFor } from "./questions.js";
 import { levelForScore, scoreAnswers } from "./scoring.js";
 import type { AnswerValue } from "./types.js";
 
@@ -22,6 +23,19 @@ test("scores the documented boundaries", () => {
   assert.equal(levelForScore(40), 3);
   assert.throws(() => levelForScore(9));
   assert.throws(() => levelForScore(25));
+});
+
+test("the current questionnaire scores ten answers and keeps audiometry separate", () => {
+  const scored = QUESTIONS.filter((question) => question.scored);
+  assert.equal(QUESTIONS.length, 11);
+  assert.equal(scored.length, 10);
+  assert.equal(QUESTIONS[0].text, "Sente que está deixando de aproveitar a vida ou ficando em desvantagem por não ouvir bem?");
+  assert.equal(QUESTIONS[3].text, "Em algum dos ouvidos você sente que escuta menos?");
+  assert.equal(QUESTIONS[4].text, "Você ouve algum zumbido, chiado ou apito nos ouvidos?");
+  assert.equal(QUESTIONS[10].text, "Você já fez um exame de audiometria alguma vez?");
+  assert.equal(QUESTIONS[10].scored, false);
+  assert.equal(questionsFor(null).length, 10);
+  assert.equal(questionsFor(QUESTIONNAIRE_VERSION), QUESTIONS);
 });
 
 test("resolves campaign origin", () => {

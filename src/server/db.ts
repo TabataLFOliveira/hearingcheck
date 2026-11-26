@@ -4,24 +4,25 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import {
   ANSWER_LABEL,
+  ANSWER_PENDING,
   CONSENT_VERSION,
   DEMO_PASSWORD,
   DEMO_USERS,
   LEVEL_LABEL,
+  LEVEL_PENDING,
   ORIGIN_LABEL,
   REMINDER,
   RESULT_COPY,
   STATUS_LABEL,
-  THANKS_DONE,
   THANKS_LEAD,
   contactMessage,
 } from "../shared/copy.js";
 import { cleanTracking, resolveOrigin } from "../shared/origin.js";
 import { formatWhatsapp, normalizeName, normalizeWhatsapp, whatsappLink } from "../shared/phone.js";
-import { QUESTIONS } from "../shared/questions.js";
+import { QUESTIONNAIRE_VERSION, allowedAnswers, questionsFor } from "../shared/questions.js";
 import { levelForScore, scoreAnswers } from "../shared/scoring.js";
 import type { AnswerValue, LeadStatus, Level, Origin, Role, TrackingInput } from "../shared/types.js";
-import { ANSWER_VALUES, LEAD_STATUSES, ORIGINS } from "../shared/types.js";
+import { LEAD_STATUSES, ORIGINS } from "../shared/types.js";
 
 type SessionRow = {
   id: string;
@@ -34,6 +35,8 @@ type SessionRow = {
   score: number | null;
   level: Level | null;
   lead_choice: "sim" | "nao" | null;
+  closed_at: string | null;
+  questionnaire_version: string | null;
 };
 
 type AnswerRow = { question_id: number; value: AnswerValue };
@@ -43,8 +46,8 @@ type LeadRow = {
   session_id: string;
   name: string;
   whatsapp: string;
-  score: number;
-  level: Level;
+  score: number | null;
+  level: Level | null;
   origin: Origin;
   campaign: string | null;
   status: LeadStatus;
@@ -57,6 +60,7 @@ export type PublicResult = { title: string; body: string; reminder: string };
 export type PublicSession = {
   id: string;
   phase: "question" | "result" | "thanks";
+  questionnaireVersion: string | null;
   answers: { questionId: number; value: AnswerValue }[];
   result?: { title: string; body: string; reminder: string };
   thanks?: string;
@@ -67,7 +71,7 @@ export type LeadListItem = {
   name: string;
   whatsapp: string;
   whatsappDisplay: string;
-  level: Level;
+  level: Level | null;
   levelLabel: string;
   origin: Origin;
   originLabel: string;
@@ -81,7 +85,7 @@ export type LeadListItem = {
 export type LeadDetail = LeadListItem & {
   message: string;
   waUrl: string;
-  answers?: { questionId: number; text: string; value: AnswerValue; label: string }[];
+  answers?: { questionId: number; text: string; value: AnswerValue | null; label: string; scored: boolean }[];
 };
 
 export type Summary = {
@@ -93,6 +97,7 @@ export type Summary = {
   byStatus: { status: LeadStatus; label: string; count: number }[];
   sessionsStarted: number;
   sessionsFinished: number;
+  sessionsUnfinished: number;
 };
 
 export type StaffUser = { id: string; email: string; name: string; role: Role };
@@ -154,7 +159,9 @@ export function openDatabase(dbPath: string, options?: { seedDemo?: boolean }): 
       finished_at TEXT,
       score INTEGER,
       level INTEGER,
-      lead_choice TEXT
+      lead_choice TEXT,
+      closed_at TEXT,
+      questionnaire_version TEXT
     );
     CREATE TABLE IF NOT EXISTS answers (
       session_id TEXT NOT NULL,
@@ -168,8 +175,8 @@ export function openDatabase(dbPath: string, options?: { seedDemo?: boolean }): 
       session_id TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
       whatsapp TEXT NOT NULL,
-      score INTEGER NOT NULL,
-      level INTEGER NOT NULL,
+      score INTEGER,
+      level INTEGER,
       origin TEXT NOT NULL,
       campaign TEXT,
       status TEXT NOT NULL,
@@ -178,9 +185,67 @@ export function openDatabase(dbPath: string, options?: { seedDemo?: boolean }): 
       FOREIGN KEY (session_id) REFERENCES sessions(id)
     );
   `);
+  migrate(db);
   ensureUsers(db);
   if (options?.seedDemo !== false) seedDemoLeads(db);
   return db;
+}
+
+function columnInfo(db: DatabaseSync, table: string): Array<{ name: string; notnull: number }> {
+  return db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string; notnull: number }>;
+}
+
+function migrate(db: DatabaseSync): void {
+  const sessions = columnInfo(db, "sessions");
+  if (!sessions.some((column) => column.name === "closed_at")) {
+    db.exec("ALTER TABLE sessions ADD COLUMN closed_at TEXT");
+  }
+  if (!sessions.some((column) => column.name === "questionnaire_version")) {
+    db.exec("ALTER TABLE sessions ADD COLUMN questionnaire_version TEXT");
+  }
+
+  const score = columnInfo(db, "leads").find((column) => column.name === "score");
+  if (!score || score.notnull !== 1) return;
+
+  db.exec("PRAGMA foreign_keys = OFF");
+  db.exec("BEGIN");
+  try {
+    db.exec(`
+      CREATE TABLE leads_next (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        whatsapp TEXT NOT NULL,
+        score INTEGER,
+        level INTEGER,
+        origin TEXT NOT NULL,
+        campaign TEXT,
+        status TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (session_id) REFERENCES sessions(id)
+      );
+    `);
+    db.exec(`
+      INSERT INTO leads_next (
+        id, session_id, name, whatsapp, score, level, origin, campaign, status, created_at, updated_at
+      )
+      SELECT id, session_id, name, whatsapp, score, level, origin, campaign, status, created_at, updated_at
+      FROM leads
+    `);
+    db.exec("DROP TABLE leads");
+    db.exec("ALTER TABLE leads_next RENAME TO leads");
+    db.exec("COMMIT");
+  } catch (error) {
+    try {
+      db.exec("ROLLBACK");
+    } catch {
+      // The transaction was already closed.
+    }
+    throw error;
+  } finally {
+    db.exec("PRAGMA foreign_keys = ON");
+  }
 }
 
 function ensureUsers(db: DatabaseSync): void {
@@ -223,7 +288,7 @@ function seedDemoLeads(db: DatabaseSync): void {
       name: "Ana Demo",
       phone: "11900000001",
       tracking: { utmSource: "google", utmMedium: "cpc", utmCampaign: "busca-setembro" },
-      answers: ["sim", "sim", "sim", "sim", "sim", "sim", "sim", "sim", "nao", "nao"],
+      answers: ["sim", "sim", "sim", "sim", "sim", "sim", "sim", "sim", "nao", "nao", "sim"],
       status: "novo",
       hoursAgo: 5,
     },
@@ -231,7 +296,7 @@ function seedDemoLeads(db: DatabaseSync): void {
       name: "Carlos Demo",
       phone: "21900000002",
       tracking: { utmSource: "instagram", utmMedium: "paid", utmCampaign: "reels-familia" },
-      answers: ["sim", "sim", "sim", "sim", "nao", "nao", "nao", "nao", "nao", "nao"],
+      answers: ["sim", "sim", "sim", "sim", "nao", "nao", "nao", "nao", "nao", "nao", "nao"],
       status: "em_contato",
       hoursAgo: 26,
     },
@@ -239,7 +304,7 @@ function seedDemoLeads(db: DatabaseSync): void {
       name: "Marina Demo",
       phone: "11900000003",
       tracking: { origem: "site", utmCampaign: "home-ouvix" },
-      answers: ["nao", "nao", "nao", "nao", "nao", "nao", "nao", "nao", "sim", "nao"],
+      answers: ["nao", "nao", "nao", "nao", "nao", "nao", "nao", "nao", "sim", "nao", "sim"],
       status: "agendado",
       hoursAgo: 50,
     },
@@ -247,7 +312,7 @@ function seedDemoLeads(db: DatabaseSync): void {
       name: "Paulo Demo",
       phone: "11900000004",
       tracking: { origem: "totem" },
-      answers: ["sim", "sim", "sim", "sim", "sim", "sim", "sim", "nao", "nao", "nao"],
+      answers: ["sim", "sim", "sim", "sim", "sim", "sim", "sim", "nao", "nao", "nao", "nao"],
       status: "sem_retorno",
       hoursAgo: 72,
     },
@@ -275,8 +340,8 @@ export function createSession(db: DatabaseSync, trackingInput: TrackingInput): s
   db.prepare(
     `INSERT INTO sessions (
       id, created_at, origin, utm_source, utm_medium, utm_campaign, gclid, fbclid,
-      consent_purpose_at, consent_data_at, consent_version
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      consent_purpose_at, consent_data_at, consent_version, questionnaire_version
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
     now,
@@ -289,6 +354,7 @@ export function createSession(db: DatabaseSync, trackingInput: TrackingInput): s
     now,
     now,
     CONSENT_VERSION,
+    QUESTIONNAIRE_VERSION,
   );
   return id;
 }
@@ -305,10 +371,10 @@ export function saveAnswer(db: DatabaseSync, sessionId: string, questionId: numb
   const session = sessionRow(db, sessionId);
   if (!session) throw new DbError(404, "Teste não encontrado.");
   if (session.finished_at) throw new DbError(409, "Este teste já foi concluído.");
-  if (!Number.isInteger(questionId) || questionId < 1 || questionId > 10) {
-    throw new DbError(400, "Pergunta inválida.");
-  }
-  if (!ANSWER_VALUES.includes(value)) throw new DbError(400, "Resposta inválida.");
+  const catalog = questionsFor(session.questionnaire_version);
+  const question = catalog.find((item) => item.id === questionId);
+  if (!question) throw new DbError(400, "Pergunta inválida.");
+  if (!allowedAnswers(question).includes(value)) throw new DbError(400, "Resposta inválida.");
   db.prepare(
     `INSERT INTO answers (session_id, question_id, value) VALUES (?, ?, ?)
      ON CONFLICT(session_id, question_id) DO UPDATE SET value = excluded.value`,
@@ -327,14 +393,21 @@ export function finishSession(db: DatabaseSync, sessionId: string): { title: str
   const session = sessionRow(db, sessionId);
   if (!session) throw new DbError(404, "Teste não encontrado.");
   if (session.finished_at && session.level) return resultForLevel(session.level);
-  const answers = answerRows(db, sessionId);
-  if (answers.length !== 10) throw new DbError(400, "Responda as 10 perguntas antes de ver o resultado.");
-  const score = scoreAnswers(answers.map((answer) => answer.value));
+  const catalog = questionsFor(session.questionnaire_version);
+  const byId = new Map(answerRows(db, sessionId).map((answer) => [answer.question_id, answer.value]));
+  if (catalog.some((question) => !byId.has(question.id))) {
+    throw new DbError(400, "Responda todas as perguntas antes de ver o resultado.");
+  }
+  const score = scoreAnswers(
+    catalog.filter((question) => question.scored).map((question) => byId.get(question.id) as AnswerValue),
+  );
   const level = levelForScore(score);
-  db.prepare("UPDATE sessions SET finished_at = ?, score = ?, level = ? WHERE id = ?").run(
-    new Date().toISOString(),
+  const now = new Date().toISOString();
+  db.prepare("UPDATE sessions SET finished_at = ?, score = ?, level = ? WHERE id = ?").run(now, score, level, sessionId);
+  db.prepare("UPDATE leads SET score = ?, level = ?, updated_at = ? WHERE session_id = ?").run(
     score,
     level,
+    now,
     sessionId,
   );
   return resultForLevel(level);
@@ -347,15 +420,15 @@ export function readPublicSession(db: DatabaseSync, sessionId: string): PublicSe
     questionId: answer.question_id,
     value: answer.value,
   }));
+  const questionnaireVersion = session.questionnaire_version;
   if (!session.finished_at || !session.level) {
-    return { id: session.id, phase: "question", answers };
+    return { id: session.id, phase: "question", questionnaireVersion, answers };
   }
   const result = resultForLevel(session.level);
-  if (!session.lead_choice) {
-    return { id: session.id, phase: "result", answers, result };
+  if (!session.closed_at) {
+    return { id: session.id, phase: "result", questionnaireVersion, answers, result };
   }
-  const thanks = session.lead_choice === "sim" ? THANKS_LEAD : THANKS_DONE;
-  return { id: session.id, phase: "thanks", answers, result, thanks };
+  return { id: session.id, phase: "thanks", questionnaireVersion, answers, result, thanks: THANKS_LEAD };
 }
 
 export function createLead(
@@ -366,9 +439,6 @@ export function createLead(
 ): { id: string; origin: Origin } {
   const session = sessionRow(db, sessionId);
   if (!session) throw new DbError(404, "Teste não encontrado.");
-  if (!session.finished_at || session.score == null || !session.level) {
-    throw new DbError(400, "Veja o resultado antes de pedir contato.");
-  }
   const existing = as<{ id: string }>(db.prepare("SELECT id FROM leads WHERE session_id = ?").get(sessionId));
   if (existing) return { id: existing.id, origin: session.origin };
   const name = normalizeName(rawName);
@@ -385,12 +455,12 @@ export function createLead(
   return { id, origin: session.origin };
 }
 
-export function declineLead(db: DatabaseSync, sessionId: string): void {
+export function closeSession(db: DatabaseSync, sessionId: string): void {
   const session = sessionRow(db, sessionId);
   if (!session) throw new DbError(404, "Teste não encontrado.");
-  if (!session.finished_at) throw new DbError(400, "Veja o resultado antes de encerrar.");
-  if (session.lead_choice === "sim") return;
-  db.prepare("UPDATE sessions SET lead_choice = 'nao' WHERE id = ?").run(sessionId);
+  if (!session.finished_at || !session.level) throw new DbError(400, "Veja o resultado antes de encerrar.");
+  if (session.closed_at) return;
+  db.prepare("UPDATE sessions SET closed_at = ? WHERE id = ?").run(new Date().toISOString(), sessionId);
 }
 
 export function authenticate(db: DatabaseSync, email: string, password: string): StaffUser | undefined {
@@ -466,7 +536,7 @@ function presentLead(row: LeadRow, role: Role): LeadListItem {
     whatsapp: row.whatsapp,
     whatsappDisplay: formatWhatsapp(row.whatsapp),
     level: row.level,
-    levelLabel: LEVEL_LABEL[row.level],
+    levelLabel: row.level ? LEVEL_LABEL[row.level] : LEVEL_PENDING,
     origin: row.origin,
     originLabel: ORIGIN_LABEL[row.origin],
     campaign: row.campaign,
@@ -474,7 +544,7 @@ function presentLead(row: LeadRow, role: Role): LeadListItem {
     statusLabel: STATUS_LABEL[row.status],
     createdAt: row.created_at,
   };
-  if (role === "avaliacao") item.score = row.score;
+  if (role === "avaliacao" && row.score != null) item.score = row.score;
   return item;
 }
 
@@ -494,15 +564,18 @@ export function getLead(db: DatabaseSync, id: string, role: Role): LeadDetail | 
     waUrl: whatsappLink(row.whatsapp, message),
   };
   if (role === "avaliacao") {
+    const version = as<{ questionnaire_version: string | null }>(
+      db.prepare("SELECT questionnaire_version FROM sessions WHERE id = ?").get(row.session_id),
+    );
     const answers = answerRows(db, row.session_id);
-    detail.answers = QUESTIONS.map((question) => {
+    detail.answers = questionsFor(version?.questionnaire_version ?? null).map((question) => {
       const saved = answers.find((answer) => answer.question_id === question.id);
-      const value = saved?.value ?? "nao";
       return {
         questionId: question.id,
         text: question.text,
-        value,
-        label: ANSWER_LABEL[value],
+        value: saved?.value ?? null,
+        label: saved ? ANSWER_LABEL[saved.value] : ANSWER_PENDING,
+        scored: question.scored,
       };
     });
   }
@@ -529,7 +602,7 @@ export function openContact(db: DatabaseSync, id: string) {
     whatsappDisplay: formatWhatsapp(row.whatsapp),
     waUrl: whatsappLink(row.whatsapp, message),
     message,
-    levelLabel: LEVEL_LABEL[row.level],
+    levelLabel: row.level ? LEVEL_LABEL[row.level] : LEVEL_PENDING,
     originLabel: ORIGIN_LABEL[row.origin],
     status: row.status,
     statusLabel: STATUS_LABEL[row.status],
@@ -547,12 +620,13 @@ export function summarize(db: DatabaseSync, days: number): Summary {
   const statusRows = db.prepare(
     "SELECT status, COUNT(*) AS n FROM leads WHERE created_at >= ? GROUP BY status",
   ).all(since) as Array<{ status: LeadStatus; n: number }>;
-  const sessions = as<{ started: number; finished: number }>(
+  const sessions = as<{ started: number; finished: number; unfinished: number }>(
     db.prepare(
       `SELECT
          (SELECT COUNT(*) FROM sessions WHERE created_at >= ?) AS started,
-         (SELECT COUNT(*) FROM sessions WHERE finished_at IS NOT NULL AND finished_at >= ?) AS finished`,
-    ).get(since, since),
+         (SELECT COUNT(*) FROM sessions WHERE finished_at IS NOT NULL AND finished_at >= ?) AS finished,
+         (SELECT COUNT(*) FROM sessions WHERE created_at >= ? AND finished_at IS NULL) AS unfinished`,
+    ).get(since, since, since),
   );
   const originCount = new Map(originRows.map((row) => [row.origin, row.n]));
   const levelCount = new Map(levelRows.map((row) => [row.level, row.n]));
@@ -581,6 +655,7 @@ export function summarize(db: DatabaseSync, days: number): Summary {
     byStatus,
     sessionsStarted: sessions?.started ?? 0,
     sessionsFinished: sessions?.finished ?? 0,
+    sessionsUnfinished: sessions?.unfinished ?? 0,
   };
 }
 

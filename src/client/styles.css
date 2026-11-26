@@ -106,8 +106,39 @@ h1.center { text-align: center; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+.eyebrow.phrase {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
 
 .lede { margin: 0 0 1rem; color: var(--muted); }
+
+h1.result-primary {
+  font-size: 1.85rem;
+  line-height: 1.28;
+  margin-bottom: 0.45rem;
+}
+.result-secondary {
+  margin: 0 0 1rem;
+  color: var(--ink);
+  font-family: "Roboto Slab", Georgia, serif;
+  font-size: 1.28rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.voucher {
+  margin: 0.9rem 0 0.2rem;
+  padding: 0.95rem 1rem;
+  background: #fff;
+  color: var(--sage-dark);
+  border: 3px dashed var(--sage-dark);
+  border-radius: 2px;
+  font-family: Montserrat, Roboto, sans-serif;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
 
 .notice {
   background: var(--warn);
@@ -260,6 +291,7 @@ h1.center { text-align: center; }
 .chip.level-1 { background: var(--soft); color: var(--sage-dark); }
 .chip.level-2 { background: #efe8dc; color: #5c4a32; }
 .chip.level-3 { background: #f3e6e8; color: #6a3d42; }
+.chip.level-pending { background: var(--line); color: var(--ink); }
 .chip.button { border: 0; cursor: pointer; }
 .chip.button.active { outline: 2px solid var(--sage); }
 .score { font-weight: 700; }
@@ -270,6 +302,8 @@ h1.center { text-align: center; }
 }
 .answers { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.7rem; }
 .answers li { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--line); padding-top: 0.6rem; }
+.answers li strong { white-space: nowrap; }
+.answers .aside { display: block; margin-top: 0.25rem; color: var(--muted); font-size: 0.75rem; font-weight: 600; }
 :focus-visible { outline: 3px solid var(--sage); outline-offset: 2px; }
 h1:focus-visible { outline: none; }
 
@@ -284,6 +318,8 @@ h1:focus-visible { outline: none; }
 
 @media (max-width: 640px) {
   h1 { font-size: 1.85rem; }
+  h1.result-primary { font-size: 1.45rem; }
+  .result-secondary { font-size: 1.12rem; }
   .brand-logo { height: 44px; }
   .foot { align-items: flex-start; }
   .foot-logo { height: 22px; margin-top: 0.15rem; }
