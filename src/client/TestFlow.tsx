@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import hearingCheckLogo from "./assets/hearingcheck-logo.png";
 import { requestJson } from "./api";
-import { ANSWER_LABEL, REMINDER, TERMS } from "../shared/copy";
+import { ANSWER_LABEL, REMINDER, RESULT_VOUCHER, TERMS } from "../shared/copy";
 import { QUESTIONNAIRE_VERSION, QUESTIONS } from "../shared/questions";
 import type { AnswerValue } from "../shared/types";
 
@@ -271,9 +271,10 @@ export function TestFlow() {
       {phase === "result" && result && (
         <section className="card">
           <p className="eyebrow">Resultado</p>
-          <h1 ref={headingRef} tabIndex={-1}>{result.title}</h1>
-          <p className="lede">{result.body}</p>
+          <h1 className="result-primary" ref={headingRef} tabIndex={-1}>{result.body}</h1>
+          <p className="result-secondary">{result.title}</p>
           <div className="notice">{result.reminder || REMINDER}</div>
+          <p className="voucher">{RESULT_VOUCHER}</p>
           {error && <p className="error" role="alert">{error}</p>}
           <button className="btn" type="button" onClick={conclude} disabled={busy}>
             {busy ? "Salvando…" : "Concluir"}
@@ -283,8 +284,8 @@ export function TestFlow() {
 
       {phase === "contact" && (
         <form className="card" onSubmit={beginTest}>
-          <p className="eyebrow">Seus dados</p>
-          <h1 className="long" ref={headingRef} tabIndex={-1}>Antes do teste, deixe seu nome e WhatsApp.</h1>
+          <p className="eyebrow phrase">Vamos Começar</p>
+          <h1 className="long" ref={headingRef} tabIndex={-1}>Informe seus dados para iniciar</h1>
           <label className="field">
             <span>Nome</span>
             <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" required />

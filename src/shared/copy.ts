@@ -35,6 +35,8 @@ export const RESULT_COPY: Record<Level, { title: string; body: string }> = {
 
 export const THANKS_LEAD = "Obrigado por participar! Um de nossos especialistas entrará em contato.";
 
+export const RESULT_VOUCHER = "Benefício exclusivo: você garantiu uma avaliação auditiva 100% gratuita.";
+
 export const ANSWER_LABEL: Record<AnswerValue, string> = {
   sim: "Sim",
   as_vezes: "Às vezes",

@@ -302,6 +302,50 @@ test("an existing database keeps old leads and accepts a lead before the test en
   }
 });
 
+test("a started test that is not finished is counted apart from completed tests", async () => {
+  const staff = jar();
+  const login = await staff("/api/admin/login", {
+    method: "POST",
+    body: JSON.stringify({ email: "avaliacao@ouvix.local", password: "ouvix-demo" }),
+  });
+  assert.equal(login.status, 200);
+  const before = await staff("/api/admin/summary?days=30");
+  assert.equal(before.status, 200);
+
+  const request = jar();
+  const created = await openSession(request, {
+    purposeAccepted: true,
+    dataAccepted: true,
+    name: "Incompleto Dias",
+    whatsapp: "11955554444",
+    tracking: { origem: "site" },
+  });
+  assert.equal(created.status, 201);
+
+  const afterStart = await staff("/api/admin/summary?days=30");
+  assert.equal(afterStart.body.sessionsStarted, before.body.sessionsStarted + 1);
+  assert.equal(afterStart.body.sessionsUnfinished, before.body.sessionsUnfinished + 1);
+  assert.equal(afterStart.body.sessionsFinished, before.body.sessionsFinished);
+
+  const id = created.body.id as string;
+  for (let index = 0; index < 10; index += 1) {
+    await request(`/api/sessions/${id}/answers`, {
+      method: "POST",
+      body: JSON.stringify({ questionId: index + 1, value: "nao" }),
+    });
+  }
+  await request(`/api/sessions/${id}/answers`, {
+    method: "POST",
+    body: JSON.stringify({ questionId: 11, value: "nao" }),
+  });
+  const finished = await request(`/api/sessions/${id}/finish`, { method: "POST", body: "{}" });
+  assert.equal(finished.status, 200);
+
+  const afterFinish = await staff("/api/admin/summary?days=30");
+  assert.equal(afterFinish.body.sessionsUnfinished, before.body.sessionsUnfinished);
+  assert.equal(afterFinish.body.sessionsFinished, before.body.sessionsFinished + 1);
+});
+
 test("a host password replaces the password already stored", () => {
   const dir = mkdtempSync(path.join(tmpdir(), "hearingcheck-"));
   const dbPath = path.join(dir, "hearingcheck.sqlite");

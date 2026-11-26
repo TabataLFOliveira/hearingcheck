@@ -18,7 +18,7 @@ server.registerTool(
   {
     title: "Lead summary",
     description:
-      "Count Ouvix pre-screening leads by origin, level, and status. Returns aggregates only, with no patient names or scores.",
+      "Count Ouvix pre-screening leads by origin, level, and status. Includes how many tests were started and left unfinished. Returns aggregates only, with no patient names or scores.",
     inputSchema: {
       days: z.number().int().min(1).max(365).optional(),
     },

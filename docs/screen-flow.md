@@ -22,7 +22,9 @@ Objetivo: registrar o contato antes do questionário.
 
 Elementos:
 
-Título: "Antes do teste, deixe seu nome e WhatsApp."
+Rótulo: "Vamos Começar"
+
+Título: "Informe seus dados para iniciar"
 
 Campos: Nome e WhatsApp.
 
@@ -52,9 +54,11 @@ Objetivo: mostrar a orientação, sem a pontuação.
 
 Elementos:
 
-Texto acolhedor conforme o nível.
+A orientação do resultado em destaque, com a frase curta do nível logo abaixo.
 
 Lembrete de que o teste é uma pré-triagem.
+
+Voucher: "Benefício exclusivo: você garantiu uma avaliação auditiva 100% gratuita."
 
 Botão: "Concluir"
 

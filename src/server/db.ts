@@ -97,6 +97,7 @@ export type Summary = {
   byStatus: { status: LeadStatus; label: string; count: number }[];
   sessionsStarted: number;
   sessionsFinished: number;
+  sessionsUnfinished: number;
 };
 
 export type StaffUser = { id: string; email: string; name: string; role: Role };
@@ -619,12 +620,13 @@ export function summarize(db: DatabaseSync, days: number): Summary {
   const statusRows = db.prepare(
     "SELECT status, COUNT(*) AS n FROM leads WHERE created_at >= ? GROUP BY status",
   ).all(since) as Array<{ status: LeadStatus; n: number }>;
-  const sessions = as<{ started: number; finished: number }>(
+  const sessions = as<{ started: number; finished: number; unfinished: number }>(
     db.prepare(
       `SELECT
          (SELECT COUNT(*) FROM sessions WHERE created_at >= ?) AS started,
-         (SELECT COUNT(*) FROM sessions WHERE finished_at IS NOT NULL AND finished_at >= ?) AS finished`,
-    ).get(since, since),
+         (SELECT COUNT(*) FROM sessions WHERE finished_at IS NOT NULL AND finished_at >= ?) AS finished,
+         (SELECT COUNT(*) FROM sessions WHERE created_at >= ? AND finished_at IS NULL) AS unfinished`,
+    ).get(since, since, since),
   );
   const originCount = new Map(originRows.map((row) => [row.origin, row.n]));
   const levelCount = new Map(levelRows.map((row) => [row.level, row.n]));
@@ -653,6 +655,7 @@ export function summarize(db: DatabaseSync, days: number): Summary {
     byStatus,
     sessionsStarted: sessions?.started ?? 0,
     sessionsFinished: sessions?.finished ?? 0,
+    sessionsUnfinished: sessions?.unfinished ?? 0,
   };
 }
 

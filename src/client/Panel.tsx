@@ -28,6 +28,10 @@ function levelClass(level: Level | null): string {
   return level ? `chip level-${level}` : "chip level-pending";
 }
 
+function unfinishedLabel(count: number): string {
+  return count === 1 ? "começou e não concluiu" : "começaram e não concluíram";
+}
+
 type Summary = {
   days: number;
   leads: number;
@@ -35,6 +39,7 @@ type Summary = {
   byStatus: { status: LeadStatus; label: string; count: number }[];
   sessionsStarted: number;
   sessionsFinished: number;
+  sessionsUnfinished: number;
 };
 
 type Filters = { status: string; origin: string; level: string };
@@ -183,6 +188,7 @@ export function Panel() {
           <p><strong>{novos}</strong> novos</p>
           <p><strong>{importantes}</strong> alerta importante</p>
           <p><strong>{summary.sessionsFinished}</strong> de <strong>{summary.sessionsStarted}</strong> testes concluídos</p>
+          <p><strong>{summary.sessionsUnfinished}</strong> {unfinishedLabel(summary.sessionsUnfinished)}</p>
         </section>
       )}
       <div className="filters">
