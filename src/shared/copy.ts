@@ -1,6 +1,6 @@
 import type { AnswerValue, LeadStatus, Level, Origin, Role } from "./types.js";
 
-export const CONSENT_VERSION = "2026-10";
+export const CONSENT_VERSION = "2026-11-26";
 
 export const REMINDER =
   "Lembrando que este teste é apenas uma pré-triagem e não substitui uma avaliação médica.";
@@ -13,7 +13,7 @@ export const TERMS = {
   },
   data: {
     title: "Consentimento de uso de dados",
-    body: "Autorizo a Ouvix a guardar meu nome e meu WhatsApp para entrar em contato e agendar uma avaliação auditiva. Posso ver o resultado e recusar o contato depois.",
+    body: "Autorizo a Ouvix a guardar meu nome e meu WhatsApp para entrar em contato e agendar uma avaliação auditiva.",
     accept: "Aceito o termo de consentimento de uso de dados.",
   },
 } as const;
@@ -34,7 +34,6 @@ export const RESULT_COPY: Record<Level, { title: string; body: string }> = {
 };
 
 export const THANKS_LEAD = "Obrigado por participar! Um de nossos especialistas entrará em contato.";
-export const THANKS_DONE = THANKS_LEAD;
 
 export const ANSWER_LABEL: Record<AnswerValue, string> = {
   sim: "Sim",
@@ -62,6 +61,9 @@ export const LEVEL_LABEL: Record<Level, string> = {
   2: "Alerta leve a moderado",
   3: "Alerta importante",
 };
+
+export const LEVEL_PENDING = "Teste em andamento";
+export const ANSWER_PENDING = "Ainda não respondeu";
 
 export const ROLE_LABEL: Record<Role, string> = {
   recepcao: "Recepção",

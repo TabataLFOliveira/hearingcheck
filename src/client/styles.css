@@ -260,6 +260,7 @@ h1.center { text-align: center; }
 .chip.level-1 { background: var(--soft); color: var(--sage-dark); }
 .chip.level-2 { background: #efe8dc; color: #5c4a32; }
 .chip.level-3 { background: #f3e6e8; color: #6a3d42; }
+.chip.level-pending { background: var(--line); color: var(--ink); }
 .chip.button { border: 0; cursor: pointer; }
 .chip.button.active { outline: 2px solid var(--sage); }
 .score { font-weight: 700; }
@@ -270,6 +271,8 @@ h1.center { text-align: center; }
 }
 .answers { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.7rem; }
 .answers li { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--line); padding-top: 0.6rem; }
+.answers li strong { white-space: nowrap; }
+.answers .aside { display: block; margin-top: 0.25rem; color: var(--muted); font-size: 0.75rem; font-weight: 600; }
 :focus-visible { outline: 3px solid var(--sage); outline-offset: 2px; }
 h1:focus-visible { outline: none; }
 

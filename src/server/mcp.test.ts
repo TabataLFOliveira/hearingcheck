@@ -12,7 +12,7 @@ test("MCP tools read and update the same lead database", async () => {
   const dbPath = path.join(mkdtempSync(path.join(tmpdir(), "hearingcheck-")), "test.sqlite");
   const db = openDatabase(dbPath, { seedDemo: false });
   const sessionId = createSession(db, { utmSource: "meta", utmCampaign: "reels-familia" });
-  const answers = ["sim", "sim", "sim", "sim", "sim", "sim", "sim", "nao", "nao", "nao"] as AnswerValue[];
+  const answers = ["sim", "sim", "sim", "sim", "sim", "sim", "sim", "nao", "nao", "nao", "sim"] as AnswerValue[];
   answers.forEach((value, index) => saveAnswer(db, sessionId, index + 1, value));
   finishSession(db, sessionId);
   const lead = createLead(db, sessionId, "Paulo Demo", "11900000004");

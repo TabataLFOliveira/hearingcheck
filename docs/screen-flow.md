@@ -1,142 +1,67 @@
-## Tela 01 - Página Inicial
+## Tela 01 — Apresentação
 
-Objetivo: apresentar o HearingCheck e convidar o usuário a iniciar.
-
-Elementos:
-
-Nome da empresa
-
-Título: "Faça um teste rápido de percepção auditiva!"
-
-Texto: "Como anda sua audição?"
-
-Botão: "Conheça o teste"
-
-Nome do Hearingcheck
-
-Ação:
-Ao clicar em Conheça o teste, o sistema apresenta a tela de explicação.
-
-## Tela 02 - Conheça o teste
-
-Objetivo: informar ao usuário a finalidade do HearingCheck.
+Objetivo: apresentar o teste e recolher o consentimento antes de pedir dados pessoais.
 
 Elementos:
 
-Mensagem de finalidade: "Atenção!
+Título: "Como anda a sua audição?"
 
-Este teste é apenas uma pré-triagem e não substitui uma avaliação médica."
+Aviso de que o teste não substitui avaliação profissional.
+
+Termo de ciência e finalidade.
+
+Termo de consentimento de uso de dados.
 
 Botão: "Continuar"
 
-Ação: direcionar para os termos.
+Ação: os dois aceites são necessários. O botão abre a tela de nome e WhatsApp.
 
-## Tela 03 - Termos
+## Tela 02 — Nome e WhatsApp
 
-Objetivo: apresentar ao usuário os termos de ciência e finalidade e consentimento de uso de dados.
-
-Elementos:
-
-Termos (de forma separada, ainda em análise de organização para não tornar algo cansativo ao usuário)
-
-Botão de seleção: "Aceito o termo de ciência e finalidade."
-
-Botão de seleção: "Aceito o termo de consentimento de uso de dados."
-
-Botão: "Iniciar teste"
-
-Ação:
-
-O usuário deve selecionar os aceites necessários antes de iniciar o teste.
-
-Ao clicar em "Iniciar teste", o sistema apresenta a primeira pergunta do questionário.
-
-## Tela 04 a 13 - Questionário
-
-Objetivo: apresentar as perguntas a serem respondidas pelo usuário.
+Objetivo: registrar o contato antes do questionário.
 
 Elementos:
 
-Barra de progresso
+Título: "Antes do teste, deixe seu nome e WhatsApp."
 
-Texto da pergunta
+Campos: Nome e WhatsApp.
 
-Texto das respostas com botão de seleção
+Botões: "Voltar" e "Começar o teste"
 
-Botão: "Próxima" (tela das perguntas de 1 a 9)
+Ação: ao confirmar, o pedido entra na fila da clínica e a primeira pergunta aparece. Se a pessoa sair no meio, a equipe já tem o contato e vê o teste como em andamento.
 
-Botão: "Finalizar teste" (tela da pergunta 10)
+## Telas 03 a 13 — Questionário
 
-## Tela 14 - Resultado
-
-Objetivo: apresentar o resultado do teste do usuário
+Objetivo: aplicar as 10 perguntas da pontuação e, por último, a pergunta sobre audiometria.
 
 Elementos:
 
-Título "Resultado'
+Barra de progresso e "Pergunta N de 11".
 
-Texto do resultado sem valor, de forma acolhedora.
+Respostas "Sim", "Às vezes" e "Não" nas 10 primeiras.
 
-Texto de lembrete de finalidade: "Lembrando que este teste é apenas uma pré-triagem e não substitui uma avaliação médica."!
+Respostas "Sim" e "Não" na pergunta "Você já fez um exame de audiometria alguma vez?".
 
-Botão: "Continuar"
+Botão "Próxima" até a pergunta 10. Botão "Finalizar teste" na pergunta 11.
 
-## Tela 15 - Convite para avaliação
+Ação: a pergunta 11 fica gravada para a avaliação e não altera a pontuação de 0 a 40.
 
-Objetivo: fazer um convite de avaliação auditiva gratuita ao usuário.
+## Tela 14 — Resultado
 
-Elementos:
-
-Mensagem: "Deseja receber uma avaliação auditiva gratuita com um de nossos especialistas?"
-
-Texto de resposta com botão de seleção
-
-Opções de resposta:
-
-- Sim
-- Não
-
-Botão: "Continuar"
-
-Ação:
-
-- Caso o usuário selecione "Sim", o sistema direciona para a tela de cadastro.
-- Caso o usuário selecione "Não", o sistema apresenta a tela de agradecimento.
-
-## Tela 16 - Confirmação sem cadastro
-
-Objetivo: apresentar tela final de confirmação e agradecimento
+Objetivo: mostrar a orientação, sem a pontuação.
 
 Elementos:
 
-Mensagem: "Obrigado por participar! E não deixe de realizar sua avaliação auditiva periódica."
+Texto acolhedor conforme o nível.
 
-Nome do Hearingcheck
+Lembrete de que o teste é uma pré-triagem.
 
-## Tela 17 - Cadastro
+Botão: "Concluir"
 
-Objetivo: solicitar a digitação de dados pelo usuário
+## Tela 15 — Confirmação
 
-Elementos:
-
-Mensagem: "Digite seus dados abaixo para receber sua avaliação auditiva gratuita."
-
-Texto: "Nome"
-
-Área de digitação do nome
-
-Texto: "Contato"
-
-Área de digitação do contato 
-
-Botão: "Confirmar e continuar"
-
-## Tela 18 - Confirmação após cadastro
-
-Objetivo: apresentar tela final de confirmação e agradecimento
+Objetivo: encerrar informando o contato da equipe.
 
 Elementos:
 
 Mensagem: "Obrigado por participar! Um de nossos especialistas entrará em contato."
-
-Nome do Hearingcheck

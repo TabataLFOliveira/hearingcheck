@@ -2,29 +2,17 @@
                        │
        ┌───────────────┼────────────────┐
        │               │                │
-     Site          Link na bio       Totem
+     Site          Google / Meta      Totem
        │               │                │
        └───────────────┼────────────────┘
                        ↓
-              Conheça o teste
+           Apresentação e termos
                        ↓
-              Avisos e orientações
-                       ↓
-             Consentimento / LGPD
+              Nome e WhatsApp
                        ↓
                  Questionário
-              10 perguntas + progresso
+        10 perguntas pontuadas + audiometria
                        ↓
-                    Resultado
+            Resultado sem pontuação
                        ↓
-             Classificação + orientação
-                       ↓
-          Deseja receber uma avaliação?
-                  /             \
-                SIM              NÃO
-                 ↓                ↓
-         Nome + telefone      Finalização
-                 ↓
-            Confirmação
-                 ↓
-       Equipe entrará em contato
+     Confirmação de que a equipe entrará em contato

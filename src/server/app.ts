@@ -3,16 +3,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express, { type NextFunction, type Request, type Response } from "express";
 import type { DatabaseSync } from "node:sqlite";
-import { THANKS_DONE, THANKS_LEAD } from "../shared/copy.js";
+import { THANKS_LEAD } from "../shared/copy.js";
 import type { AnswerValue, TrackingInput } from "../shared/types.js";
 import { ANSWER_VALUES } from "../shared/types.js";
 import {
   authenticate,
+  closeSession,
   createAdminSession,
   createLead,
   createSession,
   DbError,
-  declineLead,
   deleteAdminSession,
   finishSession,
   getLead,
@@ -94,9 +94,23 @@ export function createApp(db: DatabaseSync) {
         throw new DbError(400, "Aceite os dois termos para iniciar.");
       }
       const tracking = (body.tracking ?? {}) as TrackingInput;
-      if (typeof tracking !== "object") throw new DbError(400, "Origem inválida.");
-      const id = createSession(db, tracking);
-      res.status(201).json({ id });
+      if (typeof tracking !== "object" || tracking == null) throw new DbError(400, "Origem inválida.");
+      const name = String(body.name ?? "");
+      const whatsapp = String(body.whatsapp ?? "");
+      db.exec("BEGIN");
+      try {
+        const id = createSession(db, tracking);
+        const lead = createLead(db, id, name, whatsapp);
+        db.exec("COMMIT");
+        res.status(201).json({ id, conversion: "Lead", origin: lead.origin });
+      } catch (error) {
+        try {
+          db.exec("ROLLBACK");
+        } catch {
+          // The transaction was already closed.
+        }
+        throw error;
+      }
     }),
   );
 
@@ -125,22 +139,10 @@ export function createApp(db: DatabaseSync) {
   );
 
   app.post(
-    "/api/sessions/:id/lead",
+    "/api/sessions/:id/close",
     asyncRoute(async (req, res) => {
-      const lead = createLead(db, routeId(req.params.id), String(req.body?.name ?? ""), String(req.body?.whatsapp ?? ""));
-      res.status(201).json({
-        message: THANKS_LEAD,
-        conversion: "Lead",
-        origin: lead.origin,
-      });
-    }),
-  );
-
-  app.post(
-    "/api/sessions/:id/decline",
-    asyncRoute(async (req, res) => {
-      declineLead(db, routeId(req.params.id));
-      res.json({ message: THANKS_DONE });
+      closeSession(db, routeId(req.params.id));
+      res.json({ message: THANKS_LEAD });
     }),
   );
 
